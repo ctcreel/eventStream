@@ -1,0 +1,28 @@
+#######################################
+# Syntax Coloring Map For eventStream
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+eventStream	KEYWORD1
+eventHandler	KEYWORD1
+generatorDeviceID	KEYWORD1
+eventCallBack KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+getID	KEYWORD2
+removeHandlers	KEYWORD2
+hasHandler	KEYWORD2
+check	KEYWORD2
+canHandleEvent	KEYWORD2
+
+#######################################
+# Instances (KEYWORD2)
+#######################################
+
+#######################################
+# Constants (LITERAL1)
+#######################################
