@@ -3,7 +3,8 @@
 
 bool eventOutgoing::handler(const char *payload, const unsigned int deviceTypeID, const unsigned int deviceID) {
 	char buffer[20];
-	sprintf(buffer,"%l",broadcast());
+	unsigned long v = broadcast();
+	sprintf(buffer,"%lu",v);
 	stream->createEvent(buffer,outgoingMessageID,0,0);
 }
 
@@ -30,7 +31,13 @@ eventOutgoing::eventOutgoing(
 }
 
 bool eventIncoming::handler(const char *payload, const unsigned int deviceTypeID, const unsigned int deviceID) {
-	respond(atol(payload));	
+	unsigned long p;
+	p = atol(payload);
+	Serial.print("payload is ");
+	Serial.print(payload);
+	Serial.print(" | ");
+	Serial.println(p);
+	respond(p);	
 }
 
 eventIncoming::eventIncoming(

@@ -30,7 +30,6 @@ eventHandler::eventHandler(eventStream *r, const unsigned int m) {
 }
 
 boolean eventHandler::handleEvent(const char *p, const unsigned long m, const unsigned int r, const unsigned int d) {
-  Serial.println("Message handler ID is "+String(messageTypeID) + " and incoming message is ID "+String(m));
   if(canHandleEvent(m,r,d)) {
       return this->handler(p, r, d);
     } else {
