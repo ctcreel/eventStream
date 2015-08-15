@@ -16,23 +16,35 @@ class eventStream {
       handlers *next;
     } *events;
     
-    TextFinder *finder;
-    Stream *stream;
+    struct eventStreams {
+      Stream *stream;
+      unsigned int ID;
+      TextFinder *finder;
+      eventStreams *next;
+    } *streams;
+    
+    unsigned int streamIDs;
     unsigned int myID;
+    
+    boolean checkStream(eventStreams *s);
+    eventStreams *findStream(const unsigned int ID);
+    
   protected:
       void addHandler(eventHandler *r);
        
   public:
 
-    unsigned int getID(void);
     eventStream(Stream *s, generatorDeviceID *idg);
     void removeHandlers(const unsigned int messageTypeID, const unsigned int deviceTypeID, const unsigned int deviceID = 0);
     unsigned int hasHandler(const unsigned int messageTypeID, const unsigned int deviceTypeID, const unsigned int deviceID = 0);
-    boolean check(unsigned long timeToCheck = 0);    
+    boolean check(const unsigned long timeToCheck = 0, const unsigned int idToCheck = 0);
   
+    unsigned int getID(void);
+    unsigned int addStream(Stream *);
+
     // Create an event Only respond to messages of type messageTypeID and from devices with deviceTypeID regardless of the specific device
-    void createEvent(const char *payload, const unsigned int messageTypeID, const unsigned int deviceTypeID=0, const unsigned int deviceID = 0);
-    void createEvent(const unsigned long payload, const unsigned int messageTypeID, const unsigned int deviceTypeID=0, const unsigned int deviceID = 0);
+    void createEvent(const char *payload, const unsigned int messageTypeID, const unsigned int streamID = 0, const unsigned int deviceTypeID=0, const unsigned int deviceID = 0);
+    void createEvent(const unsigned long payload, const unsigned int messageTypeID, const unsigned int streamID = 0, const unsigned int deviceTypeID=0, const unsigned int deviceID = 0);
 };
 
 #endif
