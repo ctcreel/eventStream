@@ -8,12 +8,21 @@ unsigned int eventStream::getID(void) {
   return myID;
 }
 
+unsigned int eventStream::addStream(Stream *s) {
+	eventStreams *e = new eventStreams;
+	e->stream = s;
+	e->finder = new TextFinder(*s);
+	e->next = streams;
+	e->ID = streamIDs++;
+	streams = e;
+    s->flush();
+}
+
 eventStream::eventStream(Stream *s, generatorDeviceID *idg) {
-  stream = s;
-  stream->flush();
-  finder = new TextFinder(*stream);
-  myID = idg->getID();
-  events = 0;
+	streamIDs = 1;
+	addStream(s);
+	myID = idg->getID();
+	events = 0;
 }
 
 void eventStream::addHandler(eventHandler *r) {
@@ -70,15 +79,28 @@ unsigned int eventStream::hasHandler(const unsigned int m, const unsigned int dt
 }
 
 boolean eventStream::check(unsigned long i) {
-  unsigned int messageID;
-  unsigned int deviceTypeID;
-  unsigned int deviceID;
-  char payload[50];
-  char message[50];
   boolean finalResult = false;
   unsigned long t = now();
-  do {	
-	  while(stream->available() && finder->getString("@","#",message, 99)) {
+  eventStreams *s = streams;
+  do {
+	checkStream(s);
+  	if(s->next) {
+  		s = s->next;
+  	} else {
+  		s = streams;
+  	}
+  } while((now() - t) < i);
+  return finalResult;
+}
+
+boolean eventStream::checkStream(eventStreams *s) {
+	unsigned int messageID;
+	unsigned int deviceTypeID;
+	unsigned int deviceID;
+  	char payload[50];
+	char message[50];
+	boolean finalResult = false;
+	while(s->stream->available() && s->finder->getString("@","#",message, 99)) {
 		sscanf(message,"%u|%u|%u|%99[0-9a-zA-Z ]",&messageID,&deviceTypeID,&deviceID, payload);
 		Serial.print("Message received - ");
 		Serial.println(message);
@@ -88,20 +110,29 @@ boolean eventStream::check(unsigned long i) {
 		  n = n->next;
 		}
 	  }
-	  Alarm.delay(0);
-  } while((now() - t) < i);
-  return finalResult;
+	return finalResult;
 }
 
-void eventStream::createEvent(const char *p, const unsigned int m, const unsigned int dt, const unsigned int d) {
-  char message[100];
-  sprintf(message,"@%u|%u|%u|%s#",m,dt,d,p);
-  Serial.print("Message sent - ");
-  Serial.println(message);
-  stream->print(message);
+void eventStream::createEvent(const char *p, const unsigned int m, const unsigned int id, const unsigned int dt, const unsigned int d) {
+  	char message[100];
+  	sprintf(message,"@%u|%u|%u|%s#",m,dt,d,p);
+  	Serial.print("Message sent - ");
+  	Serial.println(message);
+  	eventStreams *s = streams;
+  	do {
+  		if(id == 0) { // 0 = broadcast message
+	  		s->stream->print(message);
+	  		s = s->next;
+	  	} else if(s->ID == id) {
+	  		s->stream->print(message);
+	  		s = 0;
+	  	} else {
+	  		s = s->next;
+	  	}
+  	} while(s);
 }
 
-void eventStream::createEvent(const unsigned long p, const unsigned int m, const unsigned int dt, const unsigned int d) {
+void eventStream::createEvent(const unsigned long p, const unsigned int m, const unsigned int id, const unsigned int dt, const unsigned int d) {
 	char b[20];
     sprintf( b, "%lu", p);
     createEvent(b,m,dt,d);
