@@ -94,6 +94,7 @@ boolean eventStream::check(const unsigned long i, const unsigned int idToCheck) 
 	    } else {
 	  		s = s->next;
 	  	}
+	  	Alarm.delay(0);
 	}
   } while((now() - t) < i);
   return finalResult;
@@ -116,6 +117,7 @@ boolean eventStream::checkStream(eventStreams *s) {
 		while(n) {
 		  finalResult = finalResult | n->handler->handleEvent(payload,messageID,deviceTypeID,deviceID);
 		  n = n->next;
+		  Alarm.delay(0);
 		}
 	  }
 	return finalResult;
