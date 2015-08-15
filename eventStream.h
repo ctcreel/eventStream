@@ -37,7 +37,7 @@ class eventStream {
     eventStream(Stream *s, generatorDeviceID *idg);
     void removeHandlers(const unsigned int messageTypeID, const unsigned int deviceTypeID, const unsigned int deviceID = 0);
     unsigned int hasHandler(const unsigned int messageTypeID, const unsigned int deviceTypeID, const unsigned int deviceID = 0);
-    boolean check(unsigned long timeToCheck = 0);    
+    boolean check(const unsigned long timeToCheck = 0, const unsigned int idToCheck = 0);
   
     unsigned int getID(void);
     unsigned int addStream(Stream *);

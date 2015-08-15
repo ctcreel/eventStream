@@ -20,6 +20,7 @@ unsigned int eventStream::addStream(Stream *s) {
 
 eventStream::eventStream(Stream *s, generatorDeviceID *idg) {
 	streamIDs = 1;
+	streams = 0;
 	addStream(s);
 	myID = idg->getID();
 	events = 0;
@@ -78,17 +79,22 @@ unsigned int eventStream::hasHandler(const unsigned int m, const unsigned int dt
   return result;
 }
 
-boolean eventStream::check(unsigned long i) {
+boolean eventStream::check(const unsigned long i, const unsigned int idToCheck) {
   boolean finalResult = false;
   unsigned long t = now();
-  eventStreams *s = streams;
   do {
-	checkStream(s);
-  	if(s->next) {
-  		s = s->next;
-  	} else {
-  		s = streams;
-  	}
+    eventStreams *s = streams;
+    while(s) {
+    	if(idToCheck == 0) {
+	    	finalResult = finalResult | checkStream(s);
+	    	s = s->next;
+	    } else if(s->ID == idToCheck) {
+	    	finalResult = finalResult | checkStream(s);
+	    	s = 0;
+	    } else {
+	  		s = s->next;
+	  	}
+	}
   } while((now() - t) < i);
   return finalResult;
 }
@@ -102,8 +108,10 @@ boolean eventStream::checkStream(eventStreams *s) {
 	boolean finalResult = false;
 	while(s->stream->available() && s->finder->getString("@","#",message, 99)) {
 		sscanf(message,"%u|%u|%u|%99[0-9a-zA-Z ]",&messageID,&deviceTypeID,&deviceID, payload);
-		Serial.print("Message received - ");
+		Serial.print("Message received --- ");
 		Serial.println(message);
+		Serial.print(" --- on stream ");
+		Serial.println(s->ID);
 		handlers *n = events;
 		while(n) {
 		  finalResult = finalResult | n->handler->handleEvent(payload,messageID,deviceTypeID,deviceID);
@@ -116,20 +124,24 @@ boolean eventStream::checkStream(eventStreams *s) {
 void eventStream::createEvent(const char *p, const unsigned int m, const unsigned int id, const unsigned int dt, const unsigned int d) {
   	char message[100];
   	sprintf(message,"@%u|%u|%u|%s#",m,dt,d,p);
-  	Serial.print("Message sent - ");
+  	Serial.print("Message sent --- ");
   	Serial.println(message);
   	eventStreams *s = streams;
-  	do {
+  	while(s) {
   		if(id == 0) { // 0 = broadcast message
 	  		s->stream->print(message);
+			Serial.print(" --- on stream ");
+			Serial.println(s->ID);
 	  		s = s->next;
 	  	} else if(s->ID == id) {
 	  		s->stream->print(message);
+			Serial.print(" --- on stream ");
+			Serial.println(s->ID);
 	  		s = 0;
 	  	} else {
 	  		s = s->next;
 	  	}
-  	} while(s);
+  	}
 }
 
 void eventStream::createEvent(const unsigned long p, const unsigned int m, const unsigned int id, const unsigned int dt, const unsigned int d) {
