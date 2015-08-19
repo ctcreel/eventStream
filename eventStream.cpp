@@ -104,8 +104,8 @@ boolean eventStream::checkStream(eventStreams *s) {
 	unsigned int messageID;
 	unsigned int deviceTypeID;
 	unsigned int deviceID;
-  	char payload[50];
-	char message[50];
+  	char payload[100];
+	char message[100];
 	boolean finalResult = false;
 	while(s->stream->available() && s->finder->getString("@","#",message, 99)) {
 		sscanf(message,"%u|%u|%u|%99[0-9a-zA-Z ]",&messageID,&deviceTypeID,&deviceID, payload);
