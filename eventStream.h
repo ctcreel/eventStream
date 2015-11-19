@@ -26,6 +26,7 @@ class eventStream {
     unsigned int streamIDs;
     unsigned int myID;
     
+    char checkSum(const char *message);
     boolean checkStream(eventStreams *s);
     eventStreams *findStream(const unsigned int ID);
     

@@ -100,7 +100,19 @@ boolean eventStream::check(const unsigned long i, const unsigned int idToCheck) 
   return finalResult;
 }
 
+char eventStream::checkSum(const char *message) {
+	char result = 0;
+	unsigned int i = 0;
+	while(message[i]) {
+		result ^= message[i];
+		i++;
+	}
+	return result;
+	
+}
+
 boolean eventStream::checkStream(eventStreams *s) {
+	unsigned int checkSumResult;
 	unsigned int messageID;
 	unsigned int deviceTypeID;
 	unsigned int deviceID;
@@ -108,16 +120,22 @@ boolean eventStream::checkStream(eventStreams *s) {
 	char message[100];
 	boolean finalResult = false;
 	while(s->stream->available() && s->finder->getString("@","#",message, 99)) {
-		sscanf(message,"%u|%u|%u|%99[0-9a-zA-Z ]",&messageID,&deviceTypeID,&deviceID, payload);
-		Serial.print("Message received --- ");
-		Serial.println(message);
-		Serial.print(" --- on stream ");
-		Serial.println(s->ID);
-		handlers *n = events;
-		while(n) {
-		  finalResult = finalResult | n->handler->handleEvent(payload,messageID,deviceTypeID,deviceID);
-		  n = n->next;
-		  Alarm.delay(0);
+		sscanf(message,"%c|%u|%u|%u|%99[0-9a-zA-Z ]",&checkSumResult,&messageID,&deviceTypeID,&deviceID, payload);
+		sprintf(message,"%u|%u|%u|%s",messageID,deviceTypeID,deviceID,payload);
+		if(checkSum(message) == checkSumResult) {
+			Serial.print("Valid message received --- ");
+			Serial.println(message);
+			Serial.print(" --- on stream ");
+			Serial.println(s->ID);
+			handlers *n = events;
+			while(n) {
+			  finalResult = finalResult | n->handler->handleEvent(payload,messageID,deviceTypeID,deviceID);
+			  n = n->next;
+			  Alarm.delay(0);
+			}
+		} else {
+			Serial.println("Message damaged");
+			return false;
 		}
 	  }
 	return finalResult;
@@ -125,7 +143,9 @@ boolean eventStream::checkStream(eventStreams *s) {
 
 void eventStream::createEvent(const char *p, const unsigned int m, const unsigned int id, const unsigned int dt, const unsigned int d) {
   	char message[100];
-  	sprintf(message,"@%u|%u|%u|%s#",m,dt,d,p);
+  	char rawMessage[100];
+  	sprintf(rawMessage,"%u|%u|%u|%s",m,dt,d,p);
+	sprintf(message,"@%c|%s#");
   	Serial.print("Message sent --- ");
   	Serial.println(message);
   	eventStreams *s = streams;
