@@ -112,7 +112,7 @@ char eventStream::checkSum(const char *message) {
 }
 
 boolean eventStream::checkStream(eventStreams *s) {
-	unsigned int checkSumResult;
+	char checkSumResult;
 	unsigned int messageID;
 	unsigned int deviceTypeID;
 	unsigned int deviceID;
@@ -122,6 +122,10 @@ boolean eventStream::checkStream(eventStreams *s) {
 	while(s->stream->available() && s->finder->getString("@","#",message, 99)) {
 		sscanf(message,"%c|%u|%u|%u|%99[0-9a-zA-Z ]",&checkSumResult,&messageID,&deviceTypeID,&deviceID, payload);
 		sprintf(message,"%u|%u|%u|%s",messageID,deviceTypeID,deviceID,payload);
+		Serial.print("Check Sum Character - ");
+		Serial.print(checkSumResult);
+		Serial.print(" / Check Sum calculation - ");
+		Serial.println(checkSum(message));
 		if(checkSum(message) == checkSumResult) {
 			Serial.print("Valid message received --- ");
 			Serial.println(message);
@@ -134,7 +138,10 @@ boolean eventStream::checkStream(eventStreams *s) {
 			  Alarm.delay(0);
 			}
 		} else {
-			Serial.println("Message damaged");
+			Serial.println("Message damaged -- ");
+			Serial.print(checkSumResult);
+			Serial.print('|');
+			Serial.println(message);
 			return false;
 		}
 	  }
@@ -145,7 +152,7 @@ void eventStream::createEvent(const char *p, const unsigned int m, const unsigne
   	char message[100];
   	char rawMessage[100];
   	sprintf(rawMessage,"%u|%u|%u|%s",m,dt,d,p);
-	sprintf(message,"@%c|%s#");
+	sprintf(message,"@%c|%s#",checkSum(rawMessage),rawMessage);
   	Serial.print("Message sent --- ");
   	Serial.println(message);
   	eventStreams *s = streams;
